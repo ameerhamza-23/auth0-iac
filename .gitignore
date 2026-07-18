@@ -6,3 +6,4 @@
 !*.tfvars.example
 crash.log
 .DS_Store
+CLAUDE.md
