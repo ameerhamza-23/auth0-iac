@@ -6,15 +6,15 @@ Terraform + Terragrunt infra-as-code for an Auth0 tenant. Single environment for
 
 ```
 modules/                    # reusable Terraform, never applied directly
-  auth0-app/                  # auth0_client + auth0_client_grant
-  auth0-connections/            # auth0_connection (username-password, social, etc.)
-  auth0-connection-clients/       # auth0_connection_client - links an app to a connection
+  app/                         # auth0_client + auth0_client_grant
+  connections/                   # auth0_connection (username-password, social, etc.)
+  connection-clients/              # auth0_connection_client - links an app to a connection
 
 live/                        # applied units, one Terragrunt run per subfolder
   terragrunt.hcl                # root for this tree - backend + provider generation, shared via include
-  apps/                        # calls modules/auth0-app
-  connections/                   # calls modules/auth0-connections
-  connection-clients/              # calls modules/auth0-connection-clients, depends on apps + connections
+  apps/                        # calls modules/app
+  connections/                   # calls modules/connections
+  connection-clients/              # calls modules/connection-clients, depends on apps + connections
 ```
 
 ## Prereqs
