@@ -9,12 +9,22 @@ modules/                    # reusable Terraform, never applied directly
   app/                         # auth0_client + auth0_client_grant
   connections/                   # auth0_connection (username-password, social, etc.)
   connection-clients/              # auth0_connection_client - links an app to a connection
+  api/                            # auth0_resource_server + scopes
+  branding/                         # auth0_branding, theme, custom pages
+  prompts/                            # universal login prompt config + custom text
+  actions/                              # auth0_action + trigger binding
+  hooks/                                  # legacy, kept for learning/comparison - see modules/hooks/main.tf
 
 live/                        # applied units, one Terragrunt run per subfolder
   terragrunt.hcl                # root for this tree - backend + provider generation, shared via include
   apps/                        # calls modules/app
   connections/                   # calls modules/connections
   connection-clients/              # calls modules/connection-clients, depends on apps + connections
+  api/                                # calls modules/api
+  branding/                             # calls modules/branding
+  prompts/                                # calls modules/prompts
+  actions/                                  # calls modules/actions
+  hooks/                                      # calls modules/hooks
 ```
 
 ## Prereqs
