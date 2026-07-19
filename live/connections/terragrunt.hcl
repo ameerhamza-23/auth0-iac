@@ -11,3 +11,8 @@
 #   inputs = { name = ..., strategy = ... }
 #
 # (source path has one extra "../" versus this file, since instances sit one directory deeper)
+#
+# Currently supports strategy = "auth0" (username-password, via password_policy/brute_force_protection/
+# requires_username/disable_signup) and strategy = "google-oauth2" (via client_id/client_secret/scopes -
+# omit client_id/client_secret to use Auth0's shared Dev Keys for testing). Other strategies need their
+# own options{} fields added when actually used - see modules/connections/main.tf.
