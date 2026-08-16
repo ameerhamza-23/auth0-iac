@@ -2,6 +2,46 @@
 
 Terraform + Terragrunt infra-as-code for an Auth0 tenant. Single environment for now.
 
+## Status
+
+Real and `terragrunt plan`-verified: `app`, `connections`, `connection-clients`, `actions`.
+Still TODO stubs: `api`, `branding`, `prompts`, `hooks` (legacy, low priority). See each
+module's `main.tf` for the exact TODO list.
+
+## Prerequisites
+
+- An Auth0 tenant, with a Machine-to-Machine app authorized for the Management API
+  (scopes: create/read/update/delete on clients, connections; read/create/update/delete on
+  client-credentials - grow the scope list as you build out more modules)
+- [Terraform](https://developer.hashicorp.com/terraform/install)
+- [Terragrunt](https://terragrunt.gruntwork.io/docs/getting-started/install/)
+
+## Setup
+
+1. Copy `.env.example` to `.env` and fill in your M2M app's credentials
+   (`AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`), then load them into your shell.
+2. Create a gitignored `local-live/` directory mirroring `live/`'s shape, but pointing
+   `terraform.source` one directory level deeper (`../../../modules/...` instead of
+   `../../modules/...`) and with its own `root.hcl` copy (since `find_in_parent_folders`
+   only walks up, it won't cross into `live/`). This keeps the public repo a clean template
+   with no real tenant data, while still letting you run and test against your own Auth0
+   tenant locally.
+
+## Usage
+
+From your own `local-live/<category>/<instance>/` (or equivalent):
+
+```bash
+terragrunt plan
+terragrunt apply
+```
+
+Or everything at once, from `local-live/`:
+
+```bash
+terragrunt run-all apply
+```
+
 ## Structure
 
 ```
@@ -33,38 +73,21 @@ subdirectory pattern (e.g. `live/apps/web/terragrunt.hcl`) since each real insta
 Terragrunt run and state file. Singletons (`branding`, `prompts`) are flat, since only one instance
 of those will ever exist per tenant.
 
-To actually deploy something, create your own equivalent of `live/` with real values - e.g. a
-gitignored `local-live/` sibling directory, mirroring `live/`'s shape but pointing `terraform.source`
-one directory level deeper (`../../../modules/...` instead of `../../modules/...`) and with its own
-`root.hcl` copy (since `find_in_parent_folders` only walks up, it won't cross into `live/`). This
-keeps the public repo a clean template with no real tenant data, while still letting you run and test
-against your own Auth0 tenant locally.
+## Contributing
 
-## Prereqs
+Contributions welcome, especially on the TODO-stub modules (`api`, `branding`, `prompts`).
 
-- Auth0 tenant, with a Machine-to-Machine app authorized for the Management API
-  (scopes: create/read/update/delete on clients, connections; read/create/update/delete on
-  client-credentials - grow the scope list as you build out more modules)
-- `terraform`, `terragrunt` installed
-- Env vars set: `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET` (the M2M app's creds) -
-  see `.env.example`
+1. Fork and clone the repo.
+2. Follow Setup above to get a local tenant plan running.
+3. Pick a module, fill in the `TODO`s in its `main.tf`/`variables.tf`/`outputs.tf` following
+   the pattern of an already-done module (e.g. `modules/connections`).
+4. Add a matching `live/<category>/` entry (template shape only - no real values, no
+   `terraform.tfvars`, nothing tenant-specific).
+5. Verify with `terragrunt plan` against your own `local-live/` before opening a PR.
+6. Open a PR describing which module/resource you filled in and what you verified.
 
-## Running a unit
+Keep `live/` a clean template - never commit real tenant data, state files, or credentials.
 
-From your own `local-live/<category>/<instance>/` (or equivalent):
+## License
 
-```bash
-terragrunt plan
-terragrunt apply
-```
-
-Or everything at once, from `local-live/`:
-
-```bash
-terragrunt run-all apply
-```
-
-## Status
-
-`modules/app` is real and `terragrunt plan`-verified. Everything else is still a TODO stub. Filling
-in as I learn Terraform/Terragrunt.
+[MIT](LICENSE)
