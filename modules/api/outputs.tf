@@ -1,2 +1,7 @@
-# TODO: output "resource_server_id"
-# TODO: output "identifier"
+output "resource_server_id" {
+  value = auth0_resource_server.this.id
+}
+
+output "identifier" {
+  value = auth0_resource_server.this.identifier
+}
