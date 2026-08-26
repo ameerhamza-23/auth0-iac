@@ -8,10 +8,10 @@ resource "auth0_connection" "this" {
 
   options {
     # username-password (strategy = "auth0")
-    password_policy         = var.password_policy
-    brute_force_protection  = var.brute_force_protection
-    requires_username       = var.requires_username
-    disable_signup          = var.disable_signup
+    password_policy        = var.password_policy
+    brute_force_protection = var.brute_force_protection
+    requires_username      = var.requires_username
+    disable_signup         = var.disable_signup
 
     # google-oauth2 - omit client_id/client_secret to fall back to Auth0's shared Dev Keys
     # (fine for testing, not for production - Auth0 rate-limits Dev Keys and shows a warning banner)
