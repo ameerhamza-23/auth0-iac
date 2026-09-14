@@ -4,16 +4,26 @@ Terraform + Terragrunt infra-as-code for an Auth0 tenant. Single environment for
 
 ## Status
 
-Real and `terragrunt plan`-verified: `app`, `connections`, `connection-clients`, `actions`.
-Still TODO stubs: `api`, `branding`, `prompts`, `hooks` (legacy, low priority). See each
-module's `main.tf` for the exact TODO list.
+All modules are implemented and pass `terraform validate` (CI runs `fmt -check` and `validate` on every
+push). `connections` only covers username-password (`auth0`) and `google-oauth2`; other strategies need
+their own `options{}` fields added. `hooks` is legacy (deprecated by Auth0) and kept for comparison only.
+`connection-clients` uses the per-link `auth0_connection_client` resource - don't mix it with
+`auth0_connection_clients` (the whole-set variant) on the same connection, since that overwrites links.
+
+State is local (`live/root.hcl`); switch the backend to remote storage before sharing this with anyone.
 
 ## Prerequisites
 
-- An Auth0 tenant, with a Machine-to-Machine app authorized for the Management API
-  (scopes: create/read/update/delete on clients, connections; read/create/update/delete on
-  client-credentials - grow the scope list as you build out more modules)
-- [Terraform](https://developer.hashicorp.com/terraform/install)
+- An Auth0 tenant, with a Machine-to-Machine app authorized for the Management API. Grant it the scopes
+  for the modules you use:
+  - `app`: `create|read|update|delete:clients`, `read|update:client_keys`, `create|read|update|delete:client_grants`
+  - `connections`, `connection-clients`: `create|read|update|delete:connections`, `read|update:clients`
+  - `api`: `create|read|update|delete:resource_servers`
+  - `actions`: `create|read|update|delete:actions`
+  - `branding`: `read|update:branding`, plus `read|update:page_templates` for custom login HTML
+  - `prompts`: `read|update:prompts`
+  - `hooks` (legacy): `create|read|update|delete:hooks`
+- [Terraform](https://developer.hashicorp.com/terraform/install) >= 1.11 (write-only action secrets)
 - [Terragrunt](https://terragrunt.gruntwork.io/docs/getting-started/install/)
 
 ## Setup
@@ -75,12 +85,12 @@ of those will ever exist per tenant.
 
 ## Contributing
 
-Contributions welcome, especially on the TODO-stub modules (`api`, `branding`, `prompts`).
+Contributions welcome, e.g. more connection strategies, or Auth0 resources that don't have a module yet.
 
 1. Fork and clone the repo.
 2. Follow Setup above to get a local tenant plan running.
-3. Pick a module, fill in the `TODO`s in its `main.tf`/`variables.tf`/`outputs.tf` following
-   the pattern of an already-done module (e.g. `modules/connections`).
+3. Pick a module (or add a new one) and extend its `main.tf`/`variables.tf`/`outputs.tf`
+   following the pattern of an existing module (e.g. `modules/connections`).
 4. Add a matching `live/<category>/` entry (template shape only - no real values, no
    `terraform.tfvars`, nothing tenant-specific).
 5. Verify with `terragrunt plan` against your own `local-live/` before opening a PR.
