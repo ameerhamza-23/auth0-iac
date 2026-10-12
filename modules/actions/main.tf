@@ -29,7 +29,17 @@ resource "auth0_action" "this" {
   secrets_wo_version = var.secrets_wo_version
 }
 
+# One action per trigger only. To run several actions on the same trigger in a defined order, set
+# bind_trigger = false on each and bind them together with modules/trigger-actions instead -
+# both resources managing the same trigger would overwrite each other.
 resource "auth0_trigger_action" "this" {
+  count = var.bind_trigger ? 1 : 0
+
   trigger   = var.trigger
   action_id = auth0_action.this.id
+}
+
+moved {
+  from = auth0_trigger_action.this
+  to   = auth0_trigger_action.this[0]
 }

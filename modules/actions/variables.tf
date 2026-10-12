@@ -37,3 +37,9 @@ variable "secrets_wo_version" {
   default     = 1
   description = "Bump this to force Auth0 to pick up changed secret values (write-only secrets aren't diffed automatically)"
 }
+
+variable "bind_trigger" {
+  type        = bool
+  default     = true
+  description = "Bind this action to its trigger directly. Set false when modules/trigger-actions orders several actions on the same trigger"
+}
