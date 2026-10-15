@@ -4,11 +4,14 @@ Terraform + Terragrunt infra-as-code for an Auth0 tenant. Single environment for
 
 ## Status
 
-All modules are implemented and pass `terraform validate` (CI runs `fmt -check` and `validate` on every
+All 16 modules are implemented and pass `terraform validate` (CI runs `fmt -check` and `validate` on every
 push). `connections` only covers username-password (`auth0`) and `google-oauth2`; other strategies need
 their own `options{}` fields added. `hooks` is legacy (deprecated by Auth0) and kept for comparison only.
 `connection-clients` uses the per-link `auth0_connection_client` resource - don't mix it with
 `auth0_connection_clients` (the whole-set variant) on the same connection, since that overwrites links.
+
+`trigger-actions` orders several actions on one trigger; set `bind_trigger = false` on those actions in
+`modules/actions` so the two don't overwrite each other.
 
 State is local (`live/root.hcl`); switch the backend to remote storage before sharing this with anyone.
 
@@ -23,6 +26,13 @@ State is local (`live/root.hcl`); switch the backend to remote storage before sh
   - `branding`: `read|update:branding`, plus `read|update:page_templates` for custom login HTML
   - `prompts`: `read|update:prompts`
   - `hooks` (legacy): `create|read|update|delete:hooks`
+  - `tenant`: `read|update:tenant_settings`
+  - `roles`: `create|read|update|delete:roles`, `read:resource_servers`
+  - `custom-domain`: `create|read|update|delete:custom_domains`
+  - `email`: `read|update:email_provider`, `create|read|update:email_templates`
+  - `organizations`: `create|read|update|delete:organizations`, `read|create|update|delete:organization_connections`
+  - `attack-protection`: `read|update:attack_protection`
+  - `guardian`: `read|update:guardian_factors`, `read|update:mfa_policies`
 - [Terraform](https://developer.hashicorp.com/terraform/install) >= 1.11 (write-only action secrets)
 - [Terragrunt](https://terragrunt.gruntwork.io/docs/getting-started/install/)
 
@@ -64,6 +74,14 @@ modules/                    # reusable Terraform, never applied directly
   prompts/                            # universal login prompt config + custom text
   actions/                              # auth0_action + trigger binding
   hooks/                                  # legacy, kept for learning/comparison - see modules/hooks/main.tf
+  trigger-actions/                          # auth0_trigger_actions - several actions on one trigger, in order
+  tenant/                                     # auth0_tenant - sessions, locales, flags (singleton)
+  roles/                                        # auth0_role + role permissions (RBAC)
+  custom-domain/                                  # auth0_custom_domain + DNS verification
+  email/                                            # auth0_email_provider + email templates
+  organizations/                                      # auth0_organization + connections/clients (B2B)
+  attack-protection/                                    # brute force, suspicious IP, breached passwords (singleton)
+  guardian/                                               # MFA policy and factors (singleton)
 
 live/                        # the SHAPE only - no real values, this is a template, not a deployment
   root.hcl                      # shared backend + provider generation for everything under live/
@@ -75,6 +93,9 @@ live/                        # the SHAPE only - no real values, this is a templa
   prompts/                                      # singleton
   actions/                                         # multi-instance category
   hooks/                                              # multi-instance category, legacy
+  trigger-actions/                                      # multi-instance category (one per trigger)
+  organizations/                                          # multi-instance category
+  tenant/, roles/, custom-domain/, email/, attack-protection/, guardian/   # singletons
 ```
 
 Multi-instance categories (`apps`, `connections`, `connection-clients`, `api`, `actions`, `hooks`)
