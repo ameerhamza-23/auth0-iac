@@ -4,11 +4,14 @@ Terraform + Terragrunt infra-as-code for an Auth0 tenant. Single environment for
 
 ## Status
 
-All 16 modules are implemented and pass `terraform validate` (CI runs `fmt -check` and `validate` on every
+All 18 modules are implemented and pass `terraform validate` (CI runs `fmt -check` and `validate` on every
 push). `connections` only covers username-password (`auth0`) and `google-oauth2`; other strategies need
 their own `options{}` fields added. `hooks` is legacy (deprecated by Auth0) and kept for comparison only.
 `connection-clients` uses the per-link `auth0_connection_client` resource - don't mix it with
 `auth0_connection_clients` (the whole-set variant) on the same connection, since that overwrites links.
+
+`log-streams` and `event-streams` keep destination credentials in separate sensitive inputs. Only the Datadog
+API key and webhook credentials are stored write-only; other log stream credentials end up in state.
 
 `trigger-actions` orders several actions on one trigger; set `bind_trigger = false` on those actions in
 `modules/actions` so the two don't overwrite each other.
@@ -33,6 +36,8 @@ State is local (`live/root.hcl`); switch the backend to remote storage before sh
   - `organizations`: `create|read|update|delete:organizations`, `read|create|update|delete:organization_connections`
   - `attack-protection`: `read|update:attack_protection`
   - `guardian`: `read|update:guardian_factors`, `read|update:mfa_policies`
+  - `log-streams`: `create|read|update|delete:log_streams`
+  - `event-streams`: `create|read|update|delete:event_streams`
 - [Terraform](https://developer.hashicorp.com/terraform/install) >= 1.11 (write-only action secrets)
 - [Terragrunt](https://terragrunt.gruntwork.io/docs/getting-started/install/)
 
@@ -82,6 +87,8 @@ modules/                    # reusable Terraform, never applied directly
   organizations/                                      # auth0_organization + connections/clients (B2B)
   attack-protection/                                    # brute force, suspicious IP, breached passwords (singleton)
   guardian/                                               # MFA policy and factors (singleton)
+  log-streams/                                              # auth0_log_stream - forward tenant logs to a SIEM or monitoring tool
+  event-streams/                                              # auth0_event_stream - deliver tenant events to a webhook, EventBridge or action
 
 live/                        # the SHAPE only - no real values, this is a template, not a deployment
   root.hcl                      # shared backend + provider generation for everything under live/
@@ -95,10 +102,12 @@ live/                        # the SHAPE only - no real values, this is a templa
   hooks/                                              # multi-instance category, legacy
   trigger-actions/                                      # multi-instance category (one per trigger)
   organizations/                                          # multi-instance category
+  log-streams/                                              # multi-instance category (one per destination)
+  event-streams/                                              # multi-instance category (one per destination)
   tenant/, roles/, custom-domain/, email/, attack-protection/, guardian/   # singletons
 ```
 
-Multi-instance categories (`apps`, `connections`, `connection-clients`, `api`, `actions`, `hooks`)
+Multi-instance categories (`apps`, `connections`, `connection-clients`, `api`, `actions`, `hooks`, `log-streams`, `event-streams`)
 don't hold a runnable unit directly - each one's `terragrunt.hcl` is a comment explaining the
 subdirectory pattern (e.g. `live/apps/web/terragrunt.hcl`) since each real instance needs its own
 Terragrunt run and state file. Singletons (`branding`, `prompts`) are flat, since only one instance
